@@ -103,6 +103,12 @@
   .hand-badge svg{animation:wave 2.4s ease-in-out infinite;transform-origin:50% 78%}
   @keyframes handpop{from{transform:scale(.3) rotate(-16deg)}}
   @keyframes wave{0%,100%{transform:rotate(0)}25%{transform:rotate(-13deg)}60%{transform:rotate(10deg)}}
+  /* mic indicator + teacher force-mute button */
+  .mic-badge{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;flex-shrink:0;
+    border-radius:9px;background:var(--green-bg);color:var(--green);animation:handpop .4s cubic-bezier(.3,1.6,.5,1)}
+  .mute-btn{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;
+    background:var(--amber-bg);color:var(--amber);transition:background .12s,color .12s}
+  .mute-btn:hover{background:var(--amber);color:#fff}
   .badge-unread{min-width:19px;height:19px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;
     font-weight:700;display:grid;place-items:center;padding:0 5px;flex-shrink:0}
   .kick-btn{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:var(--muted);flex-shrink:0;transition:background .12s,color .12s}
@@ -144,6 +150,20 @@
   .hand-btn.raised{background:var(--hand-bg);border-color:#F2C063}
   .hand-btn.raised .h-ic{background:var(--hand);color:#fff;animation:handraise .5s cubic-bezier(.3,1.5,.5,1)}
   @keyframes handraise{0%{transform:translateY(9px) rotate(-20deg) scale(.7)}60%{transform:translateY(-4px) rotate(7deg)}100%{transform:none}}
+
+  /* mic button + live level meter */
+  .mic-top{display:flex;align-items:center;gap:12px}
+  .mic-btn.on{background:#E9F8F0;border-color:#A5DEC1}
+  .mic-btn.on .mic-ic{background:var(--green);color:#fff;animation:micglow 2.2s ease-in-out infinite}
+  .mic-btn[disabled]{opacity:.7;cursor:progress}
+  @keyframes micglow{0%,100%{box-shadow:0 0 0 4px rgba(23,138,86,.13)}50%{box-shadow:0 0 0 9px rgba(23,138,86,.05)}}
+  .lvl{display:flex;align-items:center;gap:3px;height:24px}
+  .mic-btn:not(.on) .lvl{opacity:.45}
+  .lvl i{width:4px;border-radius:2px;background:#D7E6DD;transition:background .12s}
+  .lvl i:nth-child(1){height:6px}.lvl i:nth-child(2){height:12px}.lvl i:nth-child(3){height:18px}
+  .lvl i:nth-child(4){height:12px}.lvl i:nth-child(5){height:6px}
+  .lvl i.act{background:var(--green)}
+
   .status-card{border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;background:#fff;
     display:flex;flex-direction:column;gap:11px}
   .status-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px}
@@ -153,6 +173,7 @@
   .sdot.online{background:var(--green)}
   .sdot.reconnecting{background:var(--amber);animation:blink 1s infinite}
   .sdot.offline{background:var(--red)}
+  .sdot.off{background:#C9C4DC}
   .actions .spacer{flex:1;min-height:8px}
   .btn-leave{width:100%;border:1.5px solid #F0C9CE;color:var(--red);background:#fff;padding:11px;border-radius:12px;
     font-weight:700;display:flex;justify-content:center;align-items:center;gap:8px;transition:background .15s,color .15s,border-color .15s}
@@ -191,6 +212,8 @@
   .toast.pm     .t-ic{background:var(--primary-soft);color:var(--primary)}
   .toast.info   .t-ic{background:var(--gray-bg);color:var(--gray-ic)}
   .toast.error  .t-ic{background:var(--red-bg);color:var(--red)}
+  .toast.mic    .t-ic{background:var(--green-bg);color:var(--green)}
+  .toast.mute   .t-ic{background:var(--amber-bg);color:var(--amber)}
 
   /* ---------------- Mobile ---------------- */
   @media (max-width:940px){
@@ -278,15 +301,28 @@
         <b id="handLabel">بالا انداختن دست</b>
         <span class="sub" id="handSub">اجازهٔ صحبت از معلم بخواهید</span>
       </button>
+
+      <!-- NEW: microphone toggle with live level meter -->
+      <button id="micBtn" class="hand-btn mic-btn">
+        <span class="mic-top">
+          <span class="h-ic mic-ic" id="micIc"></span>
+          <span class="lvl" id="micLvl" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        </span>
+        <b id="micLabel">روشن کردن میکروفون</b>
+        <span class="sub" id="micSub">صدای خود را به کلاس اضافه کنید</span>
+      </button>
+
       <div class="status-card">
         <div class="status-row"><span class="k">وضعیت اتصال</span>
           <span class="v"><span class="sdot online" id="sDot"></span><span id="sStatus">متصل</span></span></div>
         <div class="status-row"><span class="k">اعضای متصل</span><span class="v" id="sPeers"></span></div>
+        <div class="status-row"><span class="k">میکروفون</span>
+          <span class="v"><span class="sdot off" id="sMicDot"></span><span id="sMic">خاموش</span></span></div>
         <div class="status-row"><span class="k">نام کلاس</span><span class="v" id="sRoom"></span></div>
       </div>
       <span class="spacer"></span>
       <button id="leaveBtn" class="btn-leave"><span id="exitIc"></span>ترک کلاس</button>
-      <p class="actions-hint">با کلیک روی نام هر هم‌کلاسی، گفتگوی خصوصی باز می‌شود.</p>
+      <p class="actions-hint">با کلیک روی نام هر هم‌کلاسی، گفتگوی خصوصی باز می‌شود.<br>میکروفون تنها روی HTTPS یا localhost کار می‌کند.</p>
     </aside>
   </main>
 </div>
@@ -319,6 +355,11 @@
    the room to find all current members (robust even when the
    earliest slot was freed). The earliest-joined member (lowest
    "order") is the teacher; if they leave, the next one takes over.
+
+   Voice chat: WebRTC media calls ride on the same peer object.
+   Turning the mic ON places a call to every connected peer and to
+   every peer that joins later; peers answer with their own stream
+   (mic on) or receive-only (mic off). Teacher can force-mute.
    ============================================================ */
 
 /* ---------------- config ---------------- */
@@ -336,7 +377,9 @@ const I = {
   exit:'<path d="M14.8 4.5H18a1.7 1.7 0 0 1 1.7 1.7v11.6A1.7 1.7 0 0 1 18 19.5h-3.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M10.8 8.2 7 12l3.8 3.8M7 12h8.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
   close:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
   info:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 11v5.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="12" cy="7.7" r="1.2"/>',
-  alert:'<path d="M12 3.6 22 20.4H2z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/><circle cx="12" cy="17" r="1.1"/>'
+  alert:'<path d="M12 3.6 22 20.4H2z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/><circle cx="12" cy="17" r="1.1"/>',
+  mic:'<rect x="9.2" y="2.6" width="5.6" height="10.6" rx="2.8"/><path d="M6.3 11.4a5.7 5.7 0 0 0 11.4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M12 17.1v3.2M9 20.8h6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+  micOff:'<rect x="9.2" y="2.6" width="5.6" height="10.6" rx="2.8"/><path d="M6.3 11.4a5.7 5.7 0 0 0 11.4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M12 17.1v3.2M9 20.8h6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M4.6 4.4 19.4 19.6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>'
 };
 function icon(name, size){ return `<svg width="${size||18}" height="${size||18}" viewBox="0 0 24 24" fill="currentColor">${I[name]}</svg>`; }
 
@@ -345,7 +388,7 @@ const state = {
   screen:'login',
   peer:null, myId:null, mySlot:-1, myOrder:0,
   myName:'', room:'', slug:'',
-  peers:new Map(),          // peerId -> {conn, name, role, slot, order, hand, retries, ...}
+  peers:new Map(),          // peerId -> {conn, name, role, slot, order, hand, mic, retries, ...}
   teacherId:null, amTeacher:false,
   hand:false,
   joining:false, joinResolve:null, joinTimer:null, joinDrain:null,
@@ -354,6 +397,10 @@ const state = {
   unread:new Map(),         // peerId -> count
   pmOpenFor:null,
   heartbeat:null, sigTries:0, leaving:false,
+  /* --- voice chat --- */
+  micOn:false, micPending:false, micStream:null,
+  calls:new Map(),          // peerId -> {call, audio}
+  micCtx:null, micSrc:null, micAnalyser:null, micRaf:0,
 };
 
 /* ---------------- tiny helpers ---------------- */
@@ -379,6 +426,7 @@ function slugify(r){
  $('chatIc').innerHTML  = icon('chat',16);
  $('pmIc').innerHTML    = icon('chat',16);
  $('handIc').innerHTML  = icon('hand',26);
+ $('micIc').innerHTML   = icon('mic',24);
  $('sendIc').innerHTML  = icon('send',19);
  $('exitIc').innerHTML  = icon('exit',17);
  $('pmClose').innerHTML = icon('close',15);
@@ -488,7 +536,7 @@ function finishJoin(){
   $('meName').textContent=state.myName;
   const [bg,fg]=avatarFor(state.myName);
   const av=$('meAv'); av.style.background=bg; av.style.color=fg; av.textContent=state.myName.trim()[0]||'؟';
-  computeTeacher(); renderUsers(); updateHandUI(); updateStatus();
+  computeTeacher(); renderUsers(); updateHandUI(); updateMicUI(); updateStatus();
   sysMsg('شما به کلاس پیوستید');
   toast(`به کلاس «${state.room}» خوش آمدید`,'join');
   state.heartbeat=setInterval(()=>{ if(state.amTeacher && !state.leaving) broadcastList(); },9000);
@@ -500,6 +548,7 @@ function finishJoin(){
    ============================================================ */
 function wirePeer(peer){
   peer.on('connection', c=>{ try{ attachConn(c,{outgoing:false}); }catch(_){}});
+  peer.on('call', call=>{ try{ handleIncomingCall(call); }catch(_){}});   // NEW: voice
   peer.on('disconnected', onSignalDown);
   peer.on('open', ()=>{ state.sigTries=0; updateStatus(); });
   peer.on('error', err=>{
@@ -534,7 +583,7 @@ function onSignalDown(){
 function ensureEntry(id){
   let e=state.peers.get(id);
   if(!e){
-    e={conn:null,name:null,role:'student',slot:null,order:null,hand:false,
+    e={conn:null,name:null,role:'student',slot:null,order:null,hand:false,mic:false,
        retries:0,byed:false,connecting:false,retryScheduled:false};
     state.peers.set(id,e);
   }
@@ -564,7 +613,15 @@ function attachConn(conn,{outgoing=false}={}){
         state.joinDrain=setTimeout(finishDiscover,900); // give replies a moment
       }
     }
-    if(outgoing) safeSend(conn,{type:'hello',name:state.myName,slot:state.mySlot});
+    if(outgoing) safeSend(conn,{type:'hello',name:state.myName,slot:state.mySlot,mic:state.micOn});
+    /* voice self-heal: if my mic is on and this is a re-dialed peer, re-place the call */
+    if(state.micOn && state.micStream && state.screen==='class' && !state.leaving
+       && state.peers.has(id) && !state.calls.has(id)){
+      setTimeout(()=>{
+        if(state.micOn && state.micStream && !state.leaving
+           && state.peers.has(id) && !state.calls.has(id)) callPeer(id);
+      },350);
+    }
     updateStatus();
   });
   conn.on('data', m=>{ try{ handleData(conn,m); }catch(err){ console.warn('data handler',err); } });
@@ -617,7 +674,8 @@ function retryDial(id,e){
 
 /* ============================================================
    MESSAGE ROUTER  (hello / user-list / public-msg / private-msg /
-   raise-hand / lower-hand / bye  + force-lower & kick extras)
+   raise-hand / lower-hand / mic-state / force-mute / bye
+   + kick & force-lower extras)
    ============================================================ */
 function handleData(conn,m){
   if(!m || typeof m!=='object') return;
@@ -628,6 +686,8 @@ function handleData(conn,m){
     case 'private-msg': onPrivateMsg(conn,m); break;
     case 'raise-hand':
     case 'lower-hand':  onHand(conn,m); break;
+    case 'mic-state':   onMicState(conn,m); break;
+    case 'force-mute':  onForceMute(conn); break;
     case 'force-lower': onForceLower(conn); break;
     case 'kick':        onKick(conn); break;
     case 'bye':         onBye(conn); break;
@@ -645,6 +705,7 @@ function onHello(conn,m){
     e.name=(typeof m.name==='string' && m.name.trim()) ? m.name.trim().slice(0,24) : 'کاربر';
     e.slot=(typeof m.slot==='number')?m.slot:null;
     e.order=nextOrder();
+    e.mic=!!m.mic;
     if(state.screen==='class' && !state.leaving){
       sysMsg(`${e.name} به کلاس پیوست`);
       toast(`${e.name} به کلاس پیوست`,'join');
@@ -654,6 +715,8 @@ function onHello(conn,m){
                  fromTeacher:state.amTeacher, self:{id:state.myId, order:state.myOrder}});
   if(isNew){
     computeTeacher(); renderUsers(); updateStatus();
+    /* NEW: if my mic is already on, call the newcomer automatically */
+    if(state.micOn && state.micStream && !state.leaving) callPeer(id);
     if(state.amTeacher) broadcastList();
   }
 }
@@ -684,6 +747,7 @@ function applyMembers(members){
     if(typeof u.order==='number') e.order=u.order;
     if(typeof u.slot==='number') e.slot=u.slot;
     e.hand=!!u.hand;
+    e.mic=!!u.mic;
     if(!e.conn) dial(u.id);                         // mesh self-heal
   }
   for(const [id,e] of [...state.peers]){
@@ -713,6 +777,27 @@ function onHand(conn,m){
   renderUsers();
   if(e.hand) toast(`${e.name} دستش را بالا برد`,'hand');
 }
+/* NEW: a peer toggled their mic */
+function onMicState(conn,m){
+  const e=state.peers.get(conn.peer); if(!e) return;
+  const on=!!m.on;
+  const changed = e.mic!==on;
+  e.mic=on;
+  if(!on) closeCall(conn.peer);                     // they closed their calls — clean ours too
+  if(changed && state.screen==='class' && !state.leaving){
+    toast(on ? `${e.name} میکروفون خود را روشن کرد`
+             : `${e.name} میکروفون خود را خاموش کرد`, on?'mic':'info');
+  }
+  renderUsers();
+}
+/* NEW: teacher told ME to mute */
+function onForceMute(conn){
+  const e=state.peers.get(conn.peer);
+  if(!e || e.role!=='teacher') return;              // only the teacher may mute
+  if(!state.micOn) return;
+  stopMic(true);                                    // stops tracks, closes calls, broadcasts mic-state off
+  toast('معلم شما را بی‌صدا کرد','mute');
+}
 function onForceLower(conn){
   const e=state.peers.get(conn.peer);
   if(!e || e.role!=='teacher') return;              // only the teacher may lower hands
@@ -734,6 +819,162 @@ function onBye(conn){
 }
 
 /* ============================================================
+   VOICE CHAT  (mic toggle / media calls / level meter)
+   ============================================================ */
+async function toggleMic(){
+  if(state.micPending || state.leaving || state.screen!=='class') return;
+  if(state.micOn){
+    stopMic(true);
+    toast('میکروفون شما خاموش شد','info');
+    return;
+  }
+  state.micPending=true; updateMicUI();
+  /* getUserMedia needs a secure context */
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    state.micPending=false; updateMicUI();
+    toast('میکروفون فقط روی HTTPS یا localhost کار می‌کند','error');
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }
+    });
+    state.micStream=stream; state.micOn=true; state.micPending=false;
+    startLevelMeter(stream);
+    /* call every currently-connected peer */
+    for(const [id,e] of state.peers){ if(e.conn && e.conn.open) callPeer(id); }
+    broadcast({type:'mic-state', on:true});
+    updateMicUI(); renderUsers();
+    toast('میکروفون شما روشن شد','mic');
+  }catch(err){
+    state.micPending=false;
+    const n = err && err.name;
+    toast(
+      (n==='NotAllowedError'||n==='PermissionDeniedError') ? 'اجازهٔ دسترسی به میکروفون رد شد' :
+      (n==='NotFoundError'   ||n==='DevicesNotFoundError')  ? 'میکروفونی روی این دستگاه پیدا نشد' :
+                                                              'فعال‌سازی میکروفون ناموفق بود','error');
+  }
+  updateMicUI();
+}
+
+function stopMic(broadcastChange){
+  state.micOn=false;
+  stopLevelMeter();
+  try{ if(state.micStream) state.micStream.getTracks().forEach(t=>t.stop()); }catch(_){}
+  state.micStream=null;
+  for(const id of [...state.calls.keys()]) closeCall(id);
+  if(broadcastChange && !state.leaving) broadcast({type:'mic-state', on:false});
+  updateMicUI(); renderUsers();
+}
+
+/* place (or re-place) an outgoing media call carrying my stream */
+function callPeer(id){
+  if(!state.peer || state.peer.destroyed || !state.micStream || state.leaving) return;
+  closeCall(id);                                    // never keep two calls to the same peer
+  let call;
+  try{ call = state.peer.call(id, state.micStream); }catch(_){ return; }
+  if(!call) return;
+  wireCall(id, call);
+}
+
+/* answer an incoming call: my stream if mic on, receive-only if off */
+function handleIncomingCall(call){
+  const id=call.peer;
+  if(!state.peers.has(id) || state.leaving){ try{call.close();}catch(_){} return; }
+  closeCall(id);                                    // replace any existing call with this peer
+  try{
+    if(state.micOn && state.micStream) call.answer(state.micStream);
+    else call.answer();                             // empty answer → I only listen
+  }catch(_){ return; }
+  wireCall(id, call);
+}
+
+function wireCall(id, call){
+  const entry = {call, audio:null};
+  state.calls.set(id, entry);
+  call.on('stream', remote=>{ entry.audio = attachRemoteAudio(remote); });
+  call.on('close', ()=>teardownCallEntry(id, call));
+  call.on('error', ()=>teardownCallEntry(id, call));
+}
+function teardownCallEntry(id, call){
+  const entry=state.calls.get(id);
+  if(!entry || entry.call!==call) return;           // a newer call replaced this one
+  state.calls.delete(id);
+  if(entry.audio){ try{entry.audio.srcObject=null;}catch(_){} entry.audio.remove(); }
+}
+function closeCall(id){
+  const entry=state.calls.get(id); if(!entry) return;
+  state.calls.delete(id);
+  try{ entry.call.close(); }catch(_){}
+  if(entry.audio){ try{entry.audio.srcObject=null;}catch(_){} entry.audio.remove(); }
+}
+
+/* dynamic <audio> element per remote stream (autoplay, no controls) */
+function attachRemoteAudio(stream){
+  const a=document.createElement('audio');
+  a.autoplay=true;
+  a.setAttribute('playsinline','');
+  a.style.display='none';
+  a.srcObject=stream;
+  document.body.appendChild(a);
+  const p=a.play(); if(p && p.catch) p.catch(()=>{});   // autoplay policy fallback
+  return a;
+}
+
+/* teacher force-mutes a student */
+function forceMuteUser(id, name){
+  const e=state.peers.get(id); if(!e || !e.mic) return;
+  safeSend(e.conn,{type:'force-mute'});
+  e.mic=false;
+  closeCall(id);                                    // their stopMic() also broadcasts mic-state off
+  renderUsers();
+  toast(`${name} بی‌صدا شد`,'mute');
+}
+
+/* --- live speaking-level meter (green bars next to the mic button) --- */
+function startLevelMeter(stream){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    state.micCtx = new AC();
+    if(state.micCtx.state==='suspended') state.micCtx.resume().catch(()=>{});
+    state.micSrc = state.micCtx.createMediaStreamSource(stream);
+    state.micAnalyser = state.micCtx.createAnalyser();
+    state.micAnalyser.fftSize = 256;
+    state.micSrc.connect(state.micAnalyser);
+    const data = new Uint8Array(state.micAnalyser.frequencyBinCount);
+    const bars = [...document.querySelectorAll('#micLvl i')];
+    const loop = ()=>{
+      if(!state.micOn) return;
+      state.micRaf = requestAnimationFrame(loop);
+      state.micAnalyser.getByteFrequencyData(data);
+      let sum=0; for(let i=0;i<data.length;i++) sum+=data[i];
+      const lvl = Math.min(1, (sum/data.length)/120);
+      bars.forEach((b,i)=>{ b.classList.toggle('act', lvl > (i+0.5)/bars.length); });
+    };
+    loop();
+  }catch(_){}
+}
+function stopLevelMeter(){
+  cancelAnimationFrame(state.micRaf);
+  try{ if(state.micSrc) state.micSrc.disconnect(); }catch(_){}
+  try{ if(state.micCtx) state.micCtx.close(); }catch(_){}
+  state.micSrc=null; state.micCtx=null; state.micAnalyser=null;
+  document.querySelectorAll('#micLvl i').forEach(b=>b.classList.remove('act'));
+}
+
+function updateMicUI(){
+  const b=$('micBtn');
+  b.classList.toggle('on', state.micOn);
+  b.disabled = state.micPending;
+  $('micLabel').textContent = state.micPending ? 'در حال درخواست دسترسی…'
+    : (state.micOn ? 'قطع میکروفون' : 'روشن کردن میکروفون');
+  $('micSub').textContent = state.micOn ? 'همه صدای شما را می‌شنوند' : 'صدای خود را به کلاس اضافه کنید';
+  $('sMic').textContent = state.micPending ? 'در حال درخواست…' : (state.micOn ? 'روشن' : 'خاموش');
+  $('sMicDot').className = 'sdot ' + (state.micOn ? 'online' : 'off');
+}
+
+/* ============================================================
    MEMBERSHIP / TEACHER
    ============================================================ */
 function nextOrder(){
@@ -745,8 +986,11 @@ function nextOrder(){
   return mx+1;
 }
 function roster(){
-  const arr=[{id:state.myId,name:state.myName,slot:state.mySlot,order:state.myOrder,hand:state.hand}];
-  for(const [id,e] of state.peers){ if(e.name) arr.push({id,name:e.name,slot:e.slot,order:e.order,hand:!!e.hand}); }
+  const arr=[{id:state.myId,name:state.myName,slot:state.mySlot,order:state.myOrder,
+              hand:state.hand,mic:state.micOn}];
+  for(const [id,e] of state.peers){
+    if(e.name) arr.push({id,name:e.name,slot:e.slot,order:e.order,hand:!!e.hand,mic:!!e.mic});
+  }
   return arr;
 }
 function broadcastList(){
@@ -756,6 +1000,7 @@ function broadcastList(){
 function removeUser(id,name,opts={}){
   const e=state.peers.get(id); if(!e) return;
   e.byed=true;
+  closeCall(id);                                    // NEW: drop their audio call + <audio> element
   try{ if(e.conn) e.conn.close(); }catch(_){}
   state.peers.delete(id);
   if(state.screen==='class' && !state.leaving && !opts.quiet){
@@ -800,8 +1045,8 @@ function renderUsers(){
   ut.hidden = unreadTotal===0;
   ut.textContent = faNum(unreadTotal);
   ul.appendChild(userRow({id:state.myId,name:state.myName,
-    role:state.amTeacher?'teacher':'student',hand:state.hand,me:true}));
-  others.forEach(([id,e])=>ul.appendChild(userRow({id,name:e.name,role:e.role,hand:e.hand,me:false})));
+    role:state.amTeacher?'teacher':'student',hand:state.hand,mic:state.micOn,me:true}));
+  others.forEach(([id,e])=>ul.appendChild(userRow({id,name:e.name,role:e.role,hand:e.hand,mic:e.mic,me:false})));
 }
 function userRow(u){
   const li=el('li','user-row'+(u.me?' me':''));
@@ -811,8 +1056,7 @@ function userRow(u){
   li.appendChild(av);
   const main=el('div','u-main');
   const nm=el('div','u-name'+(u.role==='teacher'?' teacher-name':''));
-  const nmTxt=el('span','nm',u.name);
-  nm.appendChild(nmTxt);
+  nm.appendChild(el('span','nm',u.name));
   if(u.me) nm.appendChild(el('span','you','(شما)'));
   main.appendChild(nm);
   main.appendChild(el('div','u-sub', u.role==='teacher'?'معلم':'دانش‌آموز'));
@@ -831,6 +1075,18 @@ function userRow(u){
       const hb=el('span','hand-badge'); hb.innerHTML=icon('hand',15); hb.title='دست بالا شده';
       li.appendChild(hb);
     }
+  }
+  /* NEW: mic-on indicator for anyone (including me) */
+  if(u.mic){
+    const mb=el('span','mic-badge'); mb.innerHTML=icon('mic',14); mb.title='میکروفون روشن';
+    li.appendChild(mb);
+  }
+  /* NEW: teacher sees a force-mute button next to muted-able students */
+  if(!u.me && state.amTeacher && u.mic){
+    const fb=el('button','mute-btn'); fb.innerHTML=icon('micOff',13);
+    fb.title='بی‌صدا کردن '+u.name;
+    fb.addEventListener('click',ev=>{ ev.stopPropagation(); forceMuteUser(u.id,u.name); });
+    li.appendChild(fb);
   }
   const un=state.unread.get(u.id)||0;
   if(un>0) li.appendChild(el('span','badge-unread',faNum(un)));
@@ -951,7 +1207,7 @@ function updateStatus(){
   $('sStatus').textContent=labels[mode];
   $('sPeers').textContent=faNum(openConnCount()+1)+' نفر';
 }
-const TOAST_ICON={join:'users',leave:'exit',hand:'hand',crown:'crown',pm:'chat',info:'info',error:'alert'};
+const TOAST_ICON={join:'users',leave:'exit',hand:'hand',crown:'crown',pm:'chat',info:'info',error:'alert',mic:'mic',mute:'micOff'};
 function toast(text,kind){
   kind=kind||'info';
   const box=$('toasts');
@@ -976,10 +1232,12 @@ function leaveClass(notice){
 function resetToLogin(){
   clearInterval(state.heartbeat); state.heartbeat=null;
   clearTimeout(state.joinTimer); clearTimeout(state.joinDrain);
+  stopMic(false);                                   // NEW: kill mic + all calls + audio elements
   try{ if(state.peer) state.peer.destroy(); }catch(_){}
   for(const [,e] of state.peers){ try{ if(e.conn) e.conn.close(); }catch(_){} }
   closePM();
   state.peers.clear(); state.pm.clear(); state.unread.clear();
+  state.calls.clear();
   state.hand=false; state.teacherId=null; state.amTeacher=false;
   state.joining=false; state.joinBest=null; state.myId=null; state.mySlot=-1; state.myOrder=0;
   state.peer=null; state.sigTries=0; state.pmOpenFor=null;
@@ -1029,6 +1287,9 @@ function setLoginBusy(busy){
   updateHandUI(); renderUsers();
   if(state.amTeacher) broadcastList();
 });
+
+/* NEW: mic toggle */
+ $('micBtn').addEventListener('click',toggleMic);
 
  $('leaveBtn').addEventListener('click',()=>leaveClass());
 
