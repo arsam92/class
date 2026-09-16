@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کلاس آنلاین | Online Classroom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2F0F9; --surface:#FFFFFF; --ink:#251F3D; --muted:#6C6685;
+    --line:#E5E1F0; --primary:#5A43D6; --primary-deep:#4834BE; --primary-soft:#EDE8FC;
+    --gold:#A87B00; --gold-bg:#FBF0D4; --hand:#DE8500; --hand-bg:#FFF1D6;
+    --green:#178A56; --green-bg:#DFF5EA; --red:#CE3D55; --red-bg:#FBE3E7;
+    --amber:#B97A0A; --amber-bg:#FCF0D8; --gray-bg:#EEECF4; --gray-ic:#67617E;
+    --radius:16px; --shadow:0 10px 30px rgba(37,31,61,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html{color-scheme:light}
+  html,body{height:100%}
+  body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  button,input{font:inherit;color:inherit}
+  button{cursor:pointer;border:none;background:none}
+  svg{display:block}
+  ::selection{background:var(--primary-soft)}
+  :focus-visible{outline:2.5px solid var(--primary);outline-offset:2px;border-radius:8px}
+  input:focus{outline:none}
+  ::placeholder{color:#A9A3C0}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#D8D3E8;border-radius:99px;border:2px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ---------------- Login ---------------- */
+  .login-screen{min-height:100dvh;display:grid;place-items:center;padding:24px}
+  .login-card{width:min(412px,100%);background:var(--surface);border:1px solid var(--line);
+    border-radius:22px;box-shadow:var(--shadow);padding:34px 30px;animation:rise .5s cubic-bezier(.2,.9,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .login-card.shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(7px)}50%{transform:translateX(-7px)}75%{transform:translateX(4px)}}
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+  .brand-mark{width:52px;height:52px;border-radius:15px;background:var(--primary);color:#fff;display:grid;place-items:center;flex-shrink:0}
+  .brand h1{font-size:22px;font-weight:800;line-height:1.3}
+  .brand p{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+  .field input{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;background:#FBFAFE;
+    transition:border-color .15s,box-shadow .15s,background .15s}
+  .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);background:#fff}
+  .field-error{color:var(--red);font-size:12.5px;font-weight:600;margin:-4px 0 12px}
+  .btn-primary{width:100%;background:var(--primary);color:#fff;padding:12px;border-radius:12px;font-weight:700;
+    transition:background .15s,transform .1s;margin-top:6px}
+  .btn-primary:hover{background:var(--primary-deep)}
+  .btn-primary:active{transform:scale(.985)}
+  .btn-primary[disabled]{opacity:.65;cursor:default}
+  .login-hint{margin-top:20px;font-size:12px;color:var(--muted);text-align:center;line-height:2}
+
+  /* ---------------- Classroom shell ---------------- */
+  .class-screen{height:100dvh;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:10px 18px;
+    background:var(--surface);border-bottom:1px solid var(--line)}
+  .topbar .brand-mark{width:38px;height:38px;border-radius:11px}
+  .top-title{font-weight:800;font-size:16px;margin-inline-end:4px}
+  .chip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px}
+  .room-chip{background:var(--primary-soft);color:var(--primary-deep)}
+  .me-chip{background:var(--gray-bg);color:var(--gray-ic)}
+  .me-av{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:700}
+  .top-spacer{flex:1}
+  .status-pill{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;
+    padding:6px 13px;border-radius:999px;background:var(--green-bg);color:var(--green)}
+  .status-pill.reconnecting{background:var(--amber-bg);color:var(--amber)}
+  .status-pill.offline{background:var(--red-bg);color:var(--red)}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .status-pill.reconnecting .dot{animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.3}}
+
+  .layout{flex:1;min-height:0;display:grid;grid-template-columns:290px minmax(0,1fr) 300px;gap:14px;padding:14px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  .panel-head{display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid var(--line);
+    font-weight:700;font-size:14px;flex-shrink:0}
+  .panel-head .h-icon{color:var(--primary)}
+  .count-pill{margin-inline-start:auto;background:#F1EFF8;color:var(--muted);font-size:11.5px;font-weight:600;
+    padding:2px 10px;border-radius:999px}
+
+  /* ---------------- Participants ---------------- */
+  #userList{list-style:none;flex:1;overflow-y:auto;padding:8px}
+  .user-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;transition:background .12s}
+  .user-row:hover{background:#F5F3FB}
+  .user-row.me{cursor:default}
+  .avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;flex-shrink:0}
+  .u-main{flex:1;min-width:0}
+  .u-name{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}
+  .u-name .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .u-name.teacher-name .nm{color:var(--gold)}
+  .u-name .you{font-size:11px;color:var(--muted);font-weight:500;flex-shrink:0}
+  .u-sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .crown{color:var(--gold);flex-shrink:0}
+  .hand-badge{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;flex-shrink:0;
+    border-radius:9px;background:var(--hand-bg);color:var(--hand);animation:handpop .4s cubic-bezier(.3,1.6,.5,1)}
+  button.hand-badge:hover{background:#FFE4B8}
+  .hand-badge svg{animation:wave 2.4s ease-in-out infinite;transform-origin:50% 78%}
+  @keyframes handpop{from{transform:scale(.3) rotate(-16deg)}}
+  @keyframes wave{0%,100%{transform:rotate(0)}25%{transform:rotate(-13deg)}60%{transform:rotate(10deg)}}
+  .badge-unread{min-width:19px;height:19px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;
+    font-weight:700;display:grid;place-items:center;padding:0 5px;flex-shrink:0}
+  .kick-btn{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:var(--muted);flex-shrink:0;transition:background .12s,color .12s}
+  .kick-btn:hover{background:var(--red-bg);color:var(--red)}
+  .kick-btn.arm{width:auto;background:var(--red);color:#fff;font-size:10.5px;font-weight:700;padding:0 9px;border-radius:999px}
+
+  /* ---------------- Chat ---------------- */
+  .msg-list{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:10px;background:#FBFAFE}
+  .msg{max-width:78%;display:flex;flex-direction:column;gap:4px;animation:msgin .22s ease both}
+  @keyframes msgin{from{opacity:0;transform:translateY(8px)}}
+  .msg.mine{align-self:flex-start;align-items:flex-start}   /* در RTL یعنی سمت راست */
+  .msg.theirs{align-self:flex-end;align-items:flex-end}
+  .bubble{padding:9px 14px;border-radius:14px;font-size:13.5px;line-height:1.9;word-break:break-word;white-space:pre-wrap}
+  .mine .bubble{background:var(--primary);color:#fff;border-end-start-radius:5px}
+  .theirs .bubble{background:#fff;border:1px solid var(--line);border-end-end-radius:5px}
+  .meta{font-size:10.5px;color:var(--muted);padding:0 4px}
+  .msg.system{align-self:center;max-width:92%;background:#EFEDF6;color:#67617E;font-size:11.5px;
+    padding:5px 14px;border-radius:999px;margin:3px 0}
+  .composer{display:flex;gap:9px;padding:12px;border-top:1px solid var(--line);background:#fff;flex-shrink:0}
+  .composer input{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;background:#FBFAFE;
+    transition:border-color .15s,box-shadow .15s,background .15s;min-width:0}
+  .composer input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);background:#fff}
+  .send-btn{width:44px;border-radius:12px;background:var(--primary);color:#fff;display:grid;place-items:center;
+    flex-shrink:0;transition:background .15s,transform .1s}
+  .send-btn:hover{background:var(--primary-deep)}
+  .send-btn:active{transform:scale(.94)}
+  .send-btn svg{transform:scaleX(-1)}
+
+  /* ---------------- Actions ---------------- */
+  .actions{padding:16px;gap:12px;overflow-y:auto}
+  .hand-btn{border:1.5px solid var(--line);border-radius:16px;padding:18px 14px;background:#fff;
+    display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;
+    transition:border-color .15s,background .15s,transform .1s}
+  .hand-btn:active{transform:scale(.98)}
+  .hand-btn .h-ic{width:48px;height:48px;border-radius:14px;background:var(--primary-soft);color:var(--primary);
+    display:grid;place-items:center;transition:background .15s,color .15s}
+  .hand-btn b{font-size:14.5px}
+  .hand-btn .sub{font-size:11.5px;color:var(--muted);line-height:1.8}
+  .hand-btn.raised{background:var(--hand-bg);border-color:#F2C063}
+  .hand-btn.raised .h-ic{background:var(--hand);color:#fff;animation:handraise .5s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes handraise{0%{transform:translateY(9px) rotate(-20deg) scale(.7)}60%{transform:translateY(-4px) rotate(7deg)}100%{transform:none}}
+  .status-card{border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;background:#fff;
+    display:flex;flex-direction:column;gap:11px}
+  .status-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px}
+  .status-row .k{color:var(--muted)}
+  .status-row .v{font-weight:600;display:flex;align-items:center;gap:7px}
+  .sdot{width:8px;height:8px;border-radius:50%}
+  .sdot.online{background:var(--green)}
+  .sdot.reconnecting{background:var(--amber);animation:blink 1s infinite}
+  .sdot.offline{background:var(--red)}
+  .actions .spacer{flex:1;min-height:8px}
+  .btn-leave{width:100%;border:1.5px solid #F0C9CE;color:var(--red);background:#fff;padding:11px;border-radius:12px;
+    font-weight:700;display:flex;justify-content:center;align-items:center;gap:8px;transition:background .15s,color .15s,border-color .15s}
+  .btn-leave:hover{background:var(--red);border-color:var(--red);color:#fff}
+  .actions-hint{font-size:11px;color:var(--muted);line-height:2;text-align:center}
+
+  /* ---------------- Private chat drawer ---------------- */
+  .pm-backdrop{position:fixed;inset:0;background:rgba(30,24,54,.34);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+  .pm-backdrop.show{opacity:1;pointer-events:auto}
+  .pm-panel{position:fixed;top:14px;bottom:14px;inset-inline-end:14px;width:min(372px,calc(100vw - 28px));
+    background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 50px rgba(30,24,54,.2);
+    display:flex;flex-direction:column;z-index:41;opacity:0;visibility:hidden;transform:translateX(-24px);
+    transition:opacity .2s,transform .22s,visibility .22s}
+  .pm-panel.open{opacity:1;visibility:visible;transform:none}
+  .pm-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .pm-head .h-icon{color:var(--primary)}
+  .pm-head b{flex:1;font-size:13.5px}
+  .pm-close{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--muted);transition:background .12s}
+  .pm-close:hover{background:var(--gray-bg)}
+  .pm-empty{margin:auto;text-align:center;color:var(--muted);font-size:12px;line-height:2.1;padding:22px}
+
+  /* ---------------- Toasts ---------------- */
+  .toasts{position:fixed;top:16px;inset-inline:0;display:flex;flex-direction:column;align-items:center;gap:8px;
+    z-index:60;pointer-events:none;padding:0 14px}
+  .toast{pointer-events:auto;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);
+    border-radius:13px;box-shadow:0 10px 28px rgba(30,24,54,.15);padding:9px 16px;font-size:13px;font-weight:600;
+    animation:toastin .3s cubic-bezier(.2,1.2,.4,1)}
+  .toast.out{animation:toastout .25s forwards}
+  @keyframes toastin{from{opacity:0;transform:translateY(-14px) scale(.95)}}
+  @keyframes toastout{to{opacity:0;transform:translateY(-10px)}}
+  .t-ic{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+  .toast.join   .t-ic{background:var(--green-bg);color:var(--green)}
+  .toast.leave  .t-ic{background:var(--gray-bg);color:var(--gray-ic)}
+  .toast.hand   .t-ic{background:var(--hand-bg);color:var(--hand)}
+  .toast.crown  .t-ic{background:var(--gold-bg);color:var(--gold)}
+  .toast.pm     .t-ic{background:var(--primary-soft);color:var(--primary)}
+  .toast.info   .t-ic{background:var(--gray-bg);color:var(--gray-ic)}
+  .toast.error  .t-ic{background:var(--red-bg);color:var(--red)}
+
+  /* ---------------- Mobile ---------------- */
+  @media (max-width:940px){
+    .class-screen{height:auto;min-height:100dvh}
+    .layout{display:flex;flex-direction:column;padding:12px}
+    .chat{order:1;min-height:62vh}
+    .actions{order:2}
+    .participants{order:3;max-height:46vh}
+    .msg{max-width:88%}
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="brand">
+      <span class="brand-mark">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="3.6" width="17.6" height="12" rx="2"/><path d="M12 15.6v2.6M8.6 21l3.4-2.8 3.4 2.8"/><path d="M7.6 9.8l2.8 2.6 5-5"/></svg>
+      </span>
+      <div>
+        <h1>کلاس آنلاین</h1>
+        <p>همتا‌به‌همتا، بدون سرور و بدون نصب</p>
+      </div>
+    </div>
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="nameInput">نام شما</label>
+        <input id="nameInput" autocomplete="name" maxlength="24" placeholder="مثلاً: آرش">
+      </div>
+      <div class="field">
+        <label for="roomInput">نام کلاس</label>
+        <input id="roomInput" autocomplete="off" maxlength="40" placeholder="مثلاً: math-class">
+      </div>
+      <div id="loginError" class="field-error" hidden></div>
+      <button id="loginBtn" class="btn-primary" type="submit">ورود به کلاس</button>
+    </form>
+    <p class="login-hint">هر کس با همین نام کلاس وارد شود به همان کلاس وصل می‌شود.<br>نام کلاس را با هم‌کلاسی‌هایتان به اشتراک بگذارید.</p>
+  </div>
+</div>
+
+<!-- ==================== CLASSROOM ==================== -->
+<div id="classScreen" class="class-screen" hidden>
+  <header class="topbar">
+    <span class="brand-mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="3.6" width="17.6" height="12" rx="2"/><path d="M12 15.6v2.6M8.6 21l3.4-2.8 3.4 2.8"/><path d="M7.6 9.8l2.8 2.6 5-5"/></svg>
+    </span>
+    <span class="top-title">کلاس آنلاین</span>
+    <span class="chip room-chip" id="roomChip"></span>
+    <span class="chip me-chip"><span class="me-av" id="meAv"></span><span id="meName"></span></span>
+    <span class="top-spacer"></span>
+    <span class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">متصل</span></span>
+  </header>
+
+  <main class="layout">
+    <!-- Participants (right column in RTL) -->
+    <aside class="panel participants">
+      <div class="panel-head">
+        <span class="h-icon" id="usersIc"></span>
+        شرکت‌کنندگان
+        <span class="badge-unread" id="unreadTotal" hidden></span>
+        <span class="count-pill" id="pCount"></span>
+      </div>
+      <ul id="userList"></ul>
+    </aside>
+
+    <!-- Public chat (middle column) -->
+    <section class="panel chat">
+      <div class="panel-head">
+        <span class="h-icon" id="chatIc"></span>
+        گفتگوی کلاس
+      </div>
+      <div id="messages" class="msg-list"></div>
+      <form id="chatForm" class="composer" autocomplete="off">
+        <input id="chatInput" maxlength="800" placeholder="پیام خود را بنویسید…">
+        <button class="send-btn" type="submit" aria-label="ارسال" id="sendIc"></button>
+      </form>
+    </section>
+
+    <!-- Actions (left column in RTL) -->
+    <aside class="panel actions">
+      <button id="handBtn" class="hand-btn">
+        <span class="h-ic" id="handIc"></span>
+        <b id="handLabel">بالا انداختن دست</b>
+        <span class="sub" id="handSub">اجازهٔ صحبت از معلم بخواهید</span>
+      </button>
+      <div class="status-card">
+        <div class="status-row"><span class="k">وضعیت اتصال</span>
+          <span class="v"><span class="sdot online" id="sDot"></span><span id="sStatus">متصل</span></span></div>
+        <div class="status-row"><span class="k">اعضای متصل</span><span class="v" id="sPeers"></span></div>
+        <div class="status-row"><span class="k">نام کلاس</span><span class="v" id="sRoom"></span></div>
+      </div>
+      <span class="spacer"></span>
+      <button id="leaveBtn" class="btn-leave"><span id="exitIc"></span>ترک کلاس</button>
+      <p class="actions-hint">با کلیک روی نام هر هم‌کلاسی، گفتگوی خصوصی باز می‌شود.</p>
+    </aside>
+  </main>
+</div>
+
+<!-- ==================== PRIVATE CHAT DRAWER ==================== -->
+<div id="pmBackdrop" class="pm-backdrop"></div>
+<aside id="pmPanel" class="pm-panel" aria-hidden="true">
+  <div class="pm-head">
+    <span class="h-icon" id="pmIc"></span>
+    <b id="pmTitle"></b>
+    <button class="pm-close" id="pmClose" aria-label="بستن"></button>
+  </div>
+  <div id="pmMessages" class="msg-list"></div>
+  <form id="pmForm" class="composer" autocomplete="off">
+    <input id="pmInput" maxlength="800" placeholder="پیام خصوصی…">
+    <button class="send-btn" type="submit" aria-label="ارسال"></button>
+  </form>
+</aside>
+
+<div id="toasts" class="toasts"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+'use strict';
+
+/* ============================================================
+   Online Classroom — serverless mesh over PeerJS
+   Discovery: each member of room "X" owns peer id "ocr-<X>-<slot>".
+   A newcomer claims the first free slot, then dials EVERY slot in
+   the room to find all current members (robust even when the
+   earliest slot was freed). The earliest-joined member (lowest
+   "order") is the teacher; if they leave, the next one takes over.
+   ============================================================ */
+
+/* ---------------- config ---------------- */
+const SLOT_PREFIX = 'ocr-';
+const MAX_SLOTS = 12;          // room capacity
+const RECONNECT_LIMIT = 3;     // auto-retry at least 3 times
+
+/* ---------------- icons (inline SVG) ---------------- */
+const I = {
+  hand:'<rect x="4.4" y="6.6" width="2.7" height="9.2" rx="1.35"/><rect x="8" y="3.6" width="2.7" height="12.2" rx="1.35"/><rect x="11.6" y="2.4" width="2.7" height="13.4" rx="1.35"/><rect x="15.2" y="4.6" width="2.7" height="11.2" rx="1.35"/><path d="M17.6 11.2c.9-1 2.4-1 3.3-.1.8.8.9 2 .2 2.9l-2.6 3.3" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><path d="M4.4 13.2h13.5v2.6a5.6 5.6 0 0 1-5.6 5.6h-2.3a5.6 5.6 0 0 1-5.6-5.6z"/>',
+  crown:'<path d="M3.4 19h17.2v1.9H3.4z"/><path d="M2.6 6.9l4.6 3.4L12 3.6l4.8 6.7 4.6-3.4-1.7 10.1H4.3z"/>',
+  users:'<circle cx="9.2" cy="8" r="3.6"/><path d="M9.2 13.4c-3.4 0-6.4 1.8-6.4 4.2v2h12.8v-2c0-2.4-3-4.2-6.4-4.2z"/><path d="M16.4 11.6a3 3 0 1 0-1.5-5.6 5 5 0 0 1 0 5.2c.5.3 1 .4 1.5.4z"/><path d="M16.9 13.6c-.4 0-.9 0-1.3.2 1.4.9 2.4 2.3 2.4 3.8v2h4v-1.8c0-2.3-2.7-4.2-5.1-4.2z"/>',
+  chat:'<path d="M12 3.2c-5.2 0-9.4 3.4-9.4 7.7 0 2.4 1.3 4.5 3.4 5.9-.1 1.1-.6 2.5-1.8 3.7 2.2-.2 4-.9 5.2-1.8.8.2 1.7.3 2.6.3 5.2 0 9.4-3.4 9.4-7.9S17.2 3.2 12 3.2z"/>',
+  send:'<path d="M3.5 20.5 21.5 12 3.5 3.5v6.6L16 12 3.5 13.9z"/>',
+  exit:'<path d="M14.8 4.5H18a1.7 1.7 0 0 1 1.7 1.7v11.6A1.7 1.7 0 0 1 18 19.5h-3.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M10.8 8.2 7 12l3.8 3.8M7 12h8.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  close:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  info:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 11v5.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="12" cy="7.7" r="1.2"/>',
+  alert:'<path d="M12 3.6 22 20.4H2z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/><circle cx="12" cy="17" r="1.1"/>'
+};
+function icon(name, size){ return `<svg width="${size||18}" height="${size||18}" viewBox="0 0 24 24" fill="currentColor">${I[name]}</svg>`; }
+
+/* ---------------- state ---------------- */
+const state = {
+  screen:'login',
+  peer:null, myId:null, mySlot:-1, myOrder:0,
+  myName:'', room:'', slug:'',
+  peers:new Map(),          // peerId -> {conn, name, role, slot, order, hand, retries, ...}
+  teacherId:null, amTeacher:false,
+  hand:false,
+  joining:false, joinResolve:null, joinTimer:null, joinDrain:null,
+  joinBest:null, joinBestScore:Infinity, pendingBootstrap:new Set(),
+  pm:new Map(),             // peerId -> [{mine,text,ts}]  (in-memory only)
+  unread:new Map(),         // peerId -> count
+  pmOpenFor:null,
+  heartbeat:null, sigTries:0, leaving:false,
+};
+
+/* ---------------- tiny helpers ---------------- */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const faNum = n => Number(n||0).toLocaleString('fa-IR');
+const faTime = ts => { try{ return new Date(ts).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}); }catch(_){ return ''; } };
+function el(tag, cls, text){ const d=document.createElement(tag); if(cls) d.className=cls; if(text!==undefined) d.textContent=text; return d; }
+function safeSend(conn,msg){ try{ if(conn && conn.open) conn.send(msg); }catch(_){}}
+function broadcast(msg){ for(const [,e] of state.peers) safeSend(e.conn,msg); }
+
+const AVATARS=[['#EDE4FF','#6B3FD6'],['#FFE9D6','#C2620A'],['#DFF3EA','#0F8A5F'],['#FFE1E6','#CE3D55'],['#E0EDFF','#2B63C8'],['#FFF1C9','#A87B00'],['#EADFFB','#7A3FD0'],['#DBF0FA','#12718F']];
+function avatarFor(name){ let h=0; for(const c of name) h=(h*31+c.codePointAt(0))>>>0; return AVATARS[h%AVATARS.length]; }
+function slugify(r){
+  const t=r.trim().toLowerCase();
+  if(/^[a-z0-9][a-z0-9-]{0,31}$/.test(t)) return t;
+  let h=5381; for(const c of t) h=((h<<5)+h+c.charCodeAt(0))>>>0;
+  return 'r'+h.toString(36);
+}
+
+/* ---------------- static icons into markup ---------------- */
+ $('usersIc').innerHTML = icon('users',16);
+ $('chatIc').innerHTML  = icon('chat',16);
+ $('pmIc').innerHTML    = icon('chat',16);
+ $('handIc').innerHTML  = icon('hand',26);
+ $('sendIc').innerHTML  = icon('send',19);
+ $('exitIc').innerHTML  = icon('exit',17);
+ $('pmClose').innerHTML = icon('close',15);
+ $('pmForm').querySelector('.send-btn').innerHTML = icon('send',19);
+
+/* ============================================================
+   JOIN FLOW
+   ============================================================ */
+function openPeer(id){
+  return new Promise((res,rej)=>{
+    let p;
+    try{ p = new Peer(id); }catch(err){ rej(err); return; }
+    let done=false;
+    const to=setTimeout(()=>{ if(done) return; done=true; try{p.destroy();}catch(_){} rej({type:'timeout'}); },10000);
+    p.on('open',()=>{ if(done) return; done=true; clearTimeout(to); res(p); });
+    p.on('error',err=>{ if(done) return; done=true; clearTimeout(to); try{p.destroy();}catch(_){} rej(err); });
+  });
+}
+/* claim the first free slot id of the room */
+async function claimSlot(slug){
+  for(let s=0;s<MAX_SLOTS;s++){
+    try{
+      const p = await openPeer(SLOT_PREFIX+slug+'-'+s);
+      return {peer:p, slot:s};
+    }catch(err){
+      if(err && err.type==='unavailable-id') continue;   // slot taken → try next
+      throw err;                                          // network problem → caller retries
+    }
+  }
+  throw {type:'room-full'};
+}
+
+async function joinClass(name, room){
+  if(typeof Peer==='undefined'){
+    setLoginBusy(false);
+    showLoginError('کتابخانه PeerJS بارگیری نشد؛ اتصال اینترنت را بررسی کنید.');
+    return;
+  }
+  state.myName=name; state.room=room; state.slug=slugify(room);
+  setLoginBusy(true);
+  let lastType=null;
+  for(let attempt=1; attempt<=RECONNECT_LIMIT+1; attempt++){   // auto-retry ≥ 3
+    try{
+      const {peer,slot} = await claimSlot(state.slug);
+      state.peer=peer; state.myId=peer.id; state.mySlot=slot; state.myOrder=null;
+      wirePeer(peer);
+      await discover(state.slug);   // find every current member of the room
+      setLoginBusy(false);
+      finishJoin();
+      return;
+    }catch(err){
+      lastType = err && err.type;
+      if(lastType==='room-full') break;
+      await sleep(800*attempt);
+    }
+  }
+  setLoginBusy(false);
+  showLoginError(lastType==='room-full'
+    ? 'ظرفیت این کلاس پر است (حداکثر '+MAX_SLOTS+' نفر).'
+    : 'اتصال برقرار نشد؛ چند لحظه دیگر دوباره تلاش کنید.');
+}
+
+/* dial every slot id of the room except mine; collect user-lists */
+function discover(slug){
+  return new Promise(resolve=>{
+    state.joining=true; state.joinResolve=resolve;
+    state.joinBest=null; state.joinBestScore=Infinity;
+    state.pendingBootstrap=new Set();
+    const targets=[];
+    for(let s=0;s<MAX_SLOTS;s++){ if(s!==state.mySlot) targets.push(SLOT_PREFIX+slug+'-'+s); }
+    if(!targets.length){ finishDiscover(); return; }
+    targets.forEach(id=>{ state.pendingBootstrap.add(id); dial(id); });
+    state.joinTimer=setTimeout(finishDiscover,4500);
+  });
+}
+function finishDiscover(){
+  if(!state.joining) return;
+  state.joining=false;
+  clearTimeout(state.joinTimer); clearTimeout(state.joinDrain);
+  const m=state.joinBest;
+  if(m){
+    state.myOrder = (typeof m.yourOrder==='number') ? m.yourOrder : nextOrder();
+    applyMembers(m.members||[]);
+  }else{
+    state.myOrder = state.mySlot;   // seems to be alone; roster broadcasts will correct this
+  }
+  const r=state.joinResolve; state.joinResolve=null;
+  if(r) r();
+}
+function collectList(m){
+  const score = m.fromTeacher ? -1 : (m.self && typeof m.self.order==='number' ? m.self.order : Infinity);
+  if(score < state.joinBestScore){ state.joinBest=m; state.joinBestScore=score; }
+  if(m.fromTeacher){ finishDiscover(); return; }
+  if(state.pendingBootstrap.size===0){
+    clearTimeout(state.joinDrain);
+    state.joinDrain=setTimeout(finishDiscover,350);
+  }
+}
+
+function finishJoin(){
+  state.screen='class';
+  if(typeof state.myOrder!=='number') state.myOrder=state.mySlot;
+  $('loginScreen').hidden=true;
+  $('classScreen').hidden=false;
+  $('roomChip').textContent=state.room;
+  $('sRoom').textContent=state.room;
+  $('meName').textContent=state.myName;
+  const [bg,fg]=avatarFor(state.myName);
+  const av=$('meAv'); av.style.background=bg; av.style.color=fg; av.textContent=state.myName.trim()[0]||'؟';
+  computeTeacher(); renderUsers(); updateHandUI(); updateStatus();
+  sysMsg('شما به کلاس پیوستید');
+  toast(`به کلاس «${state.room}» خوش آمدید`,'join');
+  state.heartbeat=setInterval(()=>{ if(state.amTeacher && !state.leaving) broadcastList(); },9000);
+  $('chatInput').focus();
+}
+
+/* ============================================================
+   PEER / CONNECTION PLUMBING
+   ============================================================ */
+function wirePeer(peer){
+  peer.on('connection', c=>{ try{ attachConn(c,{outgoing:false}); }catch(_){}});
+  peer.on('disconnected', onSignalDown);
+  peer.on('open', ()=>{ state.sigTries=0; updateStatus(); });
+  peer.on('error', err=>{
+    const t=err && err.type;
+    if(t==='peer-unavailable'){
+      const mt=/peer\s+([A-Za-z0-9_-]+)/.exec(err.message||'');
+      if(mt) handleDialFailure(mt[1]);
+      return;
+    }
+    if(t==='unavailable-id') return;
+    if(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed'){ onSignalDown(); return; }
+    toast('خطای ارتباط: '+(t||'نامشخص'),'error');
+  });
+}
+/* signaling-socket drop → reconnect up to 3 times */
+function onSignalDown(){
+  if(!state.peer || state.leaving) return;
+  updateStatus();
+  state.sigTries++;
+  if(state.sigTries<=RECONNECT_LIMIT){
+    setTimeout(()=>{
+      if(state.peer && !state.peer.destroyed && state.peer.disconnected){
+        try{ state.peer.reconnect(); }catch(_){}
+      }
+    }, 900*state.sigTries);
+  }else{
+    toast('اتصال به سرور راهنما برقرار نشد','error');
+    updateStatus();
+  }
+}
+
+function ensureEntry(id){
+  let e=state.peers.get(id);
+  if(!e){
+    e={conn:null,name:null,role:'student',slot:null,order:null,hand:false,
+       retries:0,byed:false,connecting:false,retryScheduled:false};
+    state.peers.set(id,e);
+  }
+  return e;
+}
+function dial(id){
+  const e=ensureEntry(id);
+  if(e.conn && e.conn.open) return e.conn;
+  if(e.conn && e.connecting) return e.conn;
+  if(!state.peer || state.peer.destroyed) return null;
+  let conn;
+  try{ conn=state.peer.connect(id,{reliable:true}); }
+  catch(_){ retryDial(id,e); return null; }
+  e.conn=conn; e.connecting=true;
+  attachConn(conn,{outgoing:true});
+  return conn;
+}
+function attachConn(conn,{outgoing=false}={}){
+  const id=conn.peer;
+  conn.on('open',()=>{
+    const e=state.peers.get(id);
+    if(e){ e.connecting=false; e.retries=0; }
+    if(state.pendingBootstrap.has(id)){
+      state.pendingBootstrap.delete(id);
+      if(state.pendingBootstrap.size===0){
+        clearTimeout(state.joinDrain);
+        state.joinDrain=setTimeout(finishDiscover,900); // give replies a moment
+      }
+    }
+    if(outgoing) safeSend(conn,{type:'hello',name:state.myName,slot:state.mySlot});
+    updateStatus();
+  });
+  conn.on('data', m=>{ try{ handleData(conn,m); }catch(err){ console.warn('data handler',err); } });
+  conn.on('close', ()=>onConnDown(conn));
+  conn.on('error', ()=>onConnDown(conn));
+  if(outgoing){
+    setTimeout(()=>{ if(!conn.open){ try{conn.close();}catch(_){} } },9000); // dial watchdog
+  }
+}
+function onConnDown(conn){
+  const id=conn.peer;
+  if(state.joining && state.pendingBootstrap.has(id) && !conn.open){
+    handleDialFailure(id); return;
+  }
+  const e=state.peers.get(id);
+  if(!e || e.conn!==conn) return;
+  if(state.leaving) return;
+  e.conn=null;
+  if(!conn.open){ retryDial(id,e); return; }
+  if(!e.retries) toast(`ارتباط با ${e.name} قطع شد؛ تلاش برای اتصال مجدد…`,'info');
+  retryDial(id,e);
+}
+function handleDialFailure(id){
+  if(!id) return;
+  const e=state.peers.get(id);
+  if(e && e.conn && !e.conn.open){ e.conn=null; e.connecting=false; }
+  if(state.joining && state.pendingBootstrap.has(id)){
+    state.pendingBootstrap.delete(id);
+    if(state.pendingBootstrap.size===0) finishDiscover();
+    return;
+  }
+  if(e && !e.byed) retryDial(id,e);
+}
+function retryDial(id,e){
+  if(e.retryScheduled) return;
+  e.retries=(e.retries||0)+1;
+  if(e.retries>RECONNECT_LIMIT){
+    removeUser(id,e.name,{sys: e.name?`ارتباط با ${e.name} برقرار نشد`:null});
+    return;
+  }
+  e.retryScheduled=true;
+  setTimeout(()=>{
+    e.retryScheduled=false;
+    const cur=state.peers.get(id);
+    if(cur!==e || state.leaving || cur.byed) return;
+    if(cur.conn && cur.conn.open) return;
+    dial(id);
+  }, 800*e.retries);
+}
+
+/* ============================================================
+   MESSAGE ROUTER  (hello / user-list / public-msg / private-msg /
+   raise-hand / lower-hand / bye  + force-lower & kick extras)
+   ============================================================ */
+function handleData(conn,m){
+  if(!m || typeof m!=='object') return;
+  switch(m.type){
+    case 'hello':       onHello(conn,m); break;
+    case 'user-list':   onUserList(conn,m); break;
+    case 'public-msg':  onPublicMsg(conn,m); break;
+    case 'private-msg': onPrivateMsg(conn,m); break;
+    case 'raise-hand':
+    case 'lower-hand':  onHand(conn,m); break;
+    case 'force-lower': onForceLower(conn); break;
+    case 'kick':        onKick(conn); break;
+    case 'bye':         onBye(conn); break;
+  }
+}
+
+function onHello(conn,m){
+  const id=conn.peer;
+  let e=state.peers.get(id);
+  if(e && e.conn && e.conn.open && e.conn!==conn){ try{conn.close();}catch(_){} return; } // glare: keep existing
+  const isNew = !e || !e.name;
+  e=ensureEntry(id);
+  e.conn=conn; e.connecting=false;
+  if(isNew){
+    e.name=(typeof m.name==='string' && m.name.trim()) ? m.name.trim().slice(0,24) : 'کاربر';
+    e.slot=(typeof m.slot==='number')?m.slot:null;
+    e.order=nextOrder();
+    if(state.screen==='class' && !state.leaving){
+      sysMsg(`${e.name} به کلاس پیوست`);
+      toast(`${e.name} به کلاس پیوست`,'join');
+    }
+  }
+  safeSend(conn,{type:'user-list', members:roster(), yourOrder:e.order,
+                 fromTeacher:state.amTeacher, self:{id:state.myId, order:state.myOrder}});
+  if(isNew){
+    computeTeacher(); renderUsers(); updateStatus();
+    if(state.amTeacher) broadcastList();
+  }
+}
+
+function onUserList(conn,m){
+  if(state.joining){ collectList(m); return; }
+  if(state.amTeacher) return;                       // I'm the authority
+  const e=state.peers.get(conn.peer);
+  const senderOrder = (m.self && typeof m.self.order==='number') ? m.self.order
+                    : (e && typeof e.order==='number' ? e.order : null);
+  const isTeacher = m.fromTeacher===true || conn.peer===state.teacherId;
+  const elder = senderOrder!==null && senderOrder < state.myOrder;
+  if(!isTeacher && !elder) return;                  // only teacher / earlier members may sync me
+  applyMembers(m.members||[]);
+}
+
+function applyMembers(members){
+  const seen=new Set();
+  for(const u of members){
+    if(!u || !u.id) continue;
+    if(u.id===state.myId){
+      if(typeof u.order==='number') state.myOrder=u.order;
+      continue;
+    }
+    seen.add(u.id);
+    const e=ensureEntry(u.id);
+    if(u.name) e.name=u.name;
+    if(typeof u.order==='number') e.order=u.order;
+    if(typeof u.slot==='number') e.slot=u.slot;
+    e.hand=!!u.hand;
+    if(!e.conn) dial(u.id);                         // mesh self-heal
+  }
+  for(const [id,e] of [...state.peers]){
+    if(!seen.has(id) && id!==state.myId) removeUser(id,e.name,{quiet:!e.name});
+  }
+  computeTeacher(); renderUsers(); updateStatus();
+}
+
+function onPublicMsg(conn,m){
+  if(typeof m.text!=='string' || !m.text.trim()) return;
+  const e=state.peers.get(conn.peer);
+  addMsg({name:(e&&e.name)||m.name||'کاربر', text:m.text.slice(0,800), ts:m.ts||Date.now(), mine:false});
+}
+function onPrivateMsg(conn,m){
+  if(m.to!==state.myId) return;
+  if(typeof m.text!=='string' || !m.text.trim()) return;
+  const id=conn.peer;
+  const e=state.peers.get(id); if(!e) return;
+  pushPM(id,{mine:false,text:m.text.slice(0,800),ts:m.ts||Date.now()});
+  if(state.pmOpenFor===id){ renderPM(); }
+  else{ bumpUnread(id); toast(`پیام خصوصی از ${e.name}`,'pm'); renderUsers(); }
+}
+function onHand(conn,m){
+  const e=state.peers.get(conn.peer); if(!e) return;
+  e.hand = (m.type==='raise-hand');
+  if(state.amTeacher) broadcastList();
+  renderUsers();
+  if(e.hand) toast(`${e.name} دستش را بالا برد`,'hand');
+}
+function onForceLower(conn){
+  const e=state.peers.get(conn.peer);
+  if(!e || e.role!=='teacher') return;              // only the teacher may lower hands
+  if(state.hand){
+    state.hand=false; updateHandUI(); renderUsers();
+    broadcast({type:'lower-hand'});
+  }
+  toast('معلم دست شما را پایین آورد','info');
+}
+function onKick(conn){
+  const e=state.peers.get(conn.peer);
+  if(!e || e.role!=='teacher') return;
+  leaveClass('شما توسط معلم از کلاس اخراج شدید');
+}
+function onBye(conn){
+  const id=conn.peer;
+  const e=state.peers.get(id);
+  if(e){ e.byed=true; removeUser(id,e.name); }
+}
+
+/* ============================================================
+   MEMBERSHIP / TEACHER
+   ============================================================ */
+function nextOrder(){
+  let mx=(typeof state.myOrder==='number')?state.myOrder:-1;
+  for(const [,e] of state.peers){
+    const o=(typeof e.order==='number')?e.order:-1;
+    if(o>mx) mx=o;
+  }
+  return mx+1;
+}
+function roster(){
+  const arr=[{id:state.myId,name:state.myName,slot:state.mySlot,order:state.myOrder,hand:state.hand}];
+  for(const [id,e] of state.peers){ if(e.name) arr.push({id,name:e.name,slot:e.slot,order:e.order,hand:!!e.hand}); }
+  return arr;
+}
+function broadcastList(){
+  broadcast({type:'user-list', members:roster(), fromTeacher:state.amTeacher,
+             self:{id:state.myId, order:state.myOrder}});
+}
+function removeUser(id,name,opts={}){
+  const e=state.peers.get(id); if(!e) return;
+  e.byed=true;
+  try{ if(e.conn) e.conn.close(); }catch(_){}
+  state.peers.delete(id);
+  if(state.screen==='class' && !state.leaving && !opts.quiet){
+    const msg = opts.sys!==undefined ? opts.sys : (name?`${name} کلاس را ترک کرد`:null);
+    if(msg){ sysMsg(msg); toast(msg,opts.kind||'leave'); }
+  }
+  computeTeacher(); renderUsers(); updateStatus();
+}
+/* teacher = earliest-joined member (lowest order); re-announced on change */
+function computeTeacher(){
+  let best={order:(typeof state.myOrder==='number'?state.myOrder:Infinity), id:state.myId, name:state.myName};
+  for(const [id,e] of state.peers){
+    const o=(typeof e.order==='number')?e.order:Infinity;
+    if(o<best.order) best={order:o,id,name:e.name||'کاربر'};
+  }
+  const prev=state.teacherId;
+  state.teacherId=best.id;
+  state.amTeacher = (best.id===state.myId);
+  for(const [id,e] of state.peers) e.role=(id===best.id)?'teacher':'student';
+  if(prev && prev!==best.id && state.screen==='class' && !state.leaving){
+    if(state.amTeacher){
+      sysMsg('شما اکنون معلم کلاس هستید');
+      toast('شما اکنون معلم کلاس هستید','crown');
+      broadcastList();
+    }else{
+      sysMsg(`${best.name} اکنون معلم کلاس است`);
+      toast(`${best.name} اکنون معلم کلاس است`,'crown');
+    }
+  }
+}
+
+/* ============================================================
+   UI — participants list
+   ============================================================ */
+function renderUsers(){
+  const ul=$('userList'); ul.innerHTML='';
+  const others=[...state.peers.entries()].filter(([,e])=>e.name)
+    .sort((a,b)=>((a[1].order??9e9)-(b[1].order??9e9)));
+  $('pCount').textContent = faNum(others.length+1)+' نفر';
+  let unreadTotal=0; state.unread.forEach(v=>unreadTotal+=v);
+  const ut=$('unreadTotal');
+  ut.hidden = unreadTotal===0;
+  ut.textContent = faNum(unreadTotal);
+  ul.appendChild(userRow({id:state.myId,name:state.myName,
+    role:state.amTeacher?'teacher':'student',hand:state.hand,me:true}));
+  others.forEach(([id,e])=>ul.appendChild(userRow({id,name:e.name,role:e.role,hand:e.hand,me:false})));
+}
+function userRow(u){
+  const li=el('li','user-row'+(u.me?' me':''));
+  const [bg,fg]=avatarFor(u.name);
+  const av=el('span','avatar',u.name.trim()[0]||'؟');
+  av.style.background=bg; av.style.color=fg;
+  li.appendChild(av);
+  const main=el('div','u-main');
+  const nm=el('div','u-name'+(u.role==='teacher'?' teacher-name':''));
+  const nmTxt=el('span','nm',u.name);
+  nm.appendChild(nmTxt);
+  if(u.me) nm.appendChild(el('span','you','(شما)'));
+  main.appendChild(nm);
+  main.appendChild(el('div','u-sub', u.role==='teacher'?'معلم':'دانش‌آموز'));
+  li.appendChild(main);
+  if(u.role==='teacher'){
+    const c=el('span','crown'); c.innerHTML=icon('crown',17); c.title='معلم کلاس';
+    li.appendChild(c);
+  }
+  if(u.hand){
+    if(!u.me && state.amTeacher){
+      const hb=el('button','hand-badge'); hb.innerHTML=icon('hand',15);
+      hb.title='پایین آوردن دست '+u.name;
+      hb.addEventListener('click',ev=>{ ev.stopPropagation(); forceLower(u.id); });
+      li.appendChild(hb);
+    }else{
+      const hb=el('span','hand-badge'); hb.innerHTML=icon('hand',15); hb.title='دست بالا شده';
+      li.appendChild(hb);
+    }
+  }
+  const un=state.unread.get(u.id)||0;
+  if(un>0) li.appendChild(el('span','badge-unread',faNum(un)));
+  if(!u.me && state.amTeacher){
+    const kb=el('button','kick-btn'); kb.innerHTML=icon('close',13); kb.title='اخراج '+u.name;
+    kb.addEventListener('click',ev=>{ ev.stopPropagation(); kickFlow(kb,u); });
+    li.appendChild(kb);
+  }
+  if(!u.me){
+    li.addEventListener('click',()=>openPM(u.id));
+    li.title='گفتگوی خصوصی با '+u.name;
+  }
+  return li;
+}
+function forceLower(id){
+  const e=state.peers.get(id); if(!e) return;
+  safeSend(e.conn,{type:'force-lower'});
+  e.hand=false; renderUsers();
+}
+function kickFlow(kb,u){
+  if(!kb.dataset.arm){                        // inline confirm, no confirm() dialogs
+    kb.dataset.arm='1'; kb.classList.add('arm'); kb.textContent='تأیید';
+    setTimeout(()=>{ if(!kb.isConnected) return;
+      kb.dataset.arm=''; kb.classList.remove('arm'); kb.innerHTML=icon('close',13);
+    },2600);
+    return;
+  }
+  const e=state.peers.get(u.id); if(!e) return;
+  safeSend(e.conn,{type:'kick'});
+  toast(`${u.name} اخراج شد`,'error');
+  removeUser(u.id,u.name,{sys:`${u.name} توسط معلم اخراج شد`,kind:'error'});
+  broadcastList();
+}
+
+/* ============================================================
+   UI — public chat
+   ============================================================ */
+function addMsg(o){
+  const box=$('messages');
+  const near = box.scrollHeight-box.scrollTop-box.clientHeight < 90;
+  const w=el('div');
+  if(o.system){
+    w.className='msg system'; w.textContent=o.text;
+  }else{
+    w.className='msg '+(o.mine?'mine':'theirs');
+    w.appendChild(el('div','bubble',o.text));
+    w.appendChild(el('div','meta',`${o.name} · ${faTime(o.ts)}`));
+  }
+  box.appendChild(w);
+  while(box.children.length>350) box.firstChild.remove();
+  if(near || o.mine || o.system) box.scrollTop=box.scrollHeight;   // auto-scroll
+}
+function sysMsg(text){ addMsg({system:true,text}); }
+
+/* ============================================================
+   UI — private chat drawer
+   ============================================================ */
+function pushPM(id,msg){ let a=state.pm.get(id); if(!a){a=[];state.pm.set(id,a);} a.push(msg); }
+function bumpUnread(id){ state.unread.set(id,(state.unread.get(id)||0)+1); }
+function openPM(id){
+  if(id===state.myId) return;
+  const e=state.peers.get(id); if(!e || !e.name) return;
+  state.pmOpenFor=id;
+  state.unread.set(id,0);
+  $('pmTitle').textContent=`گفتگوی خصوصی با ${e.name}`;
+  renderPM(); renderUsers();
+  $('pmBackdrop').classList.add('show');
+  $('pmPanel').classList.add('open');
+  $('pmPanel').setAttribute('aria-hidden','false');
+  setTimeout(()=>$('pmInput').focus(),80);
+}
+function closePM(){
+  state.pmOpenFor=null;
+  $('pmBackdrop').classList.remove('show');
+  $('pmPanel').classList.remove('open');
+  $('pmPanel').setAttribute('aria-hidden','true');
+  if(state.screen==='class') renderUsers();
+}
+function renderPM(){
+  const box=$('pmMessages'); box.innerHTML='';
+  const id=state.pmOpenFor; if(!id) return;
+  const msgs=state.pm.get(id)||[];
+  if(!msgs.length){
+    const e=state.peers.get(id);
+    box.appendChild(el('div','pm-empty',
+      `این گفتگو فقط بین شما و ${e?e.name:'این کاربر'} دیده می‌شود؛ پیام‌های خصوصی ذخیره نمی‌شوند و با تازه‌سازی صفحه پاک می‌شوند.`));
+    return;
+  }
+  for(const m of msgs){
+    const w=el('div','msg '+(m.mine?'mine':'theirs'));
+    w.appendChild(el('div','bubble',m.text));
+    w.appendChild(el('div','meta',faTime(m.ts)));
+    box.appendChild(w);
+  }
+  box.scrollTop=box.scrollHeight;
+}
+
+/* ============================================================
+   UI — hand toggle / status / toasts
+   ============================================================ */
+function updateHandUI(){
+  const b=$('handBtn');
+  b.classList.toggle('raised',state.hand);
+  $('handLabel').textContent = state.hand?'پایین آوردن دست':'بالا انداختن دست';
+  $('handSub').textContent   = state.hand?'دست شما بالاست — منتظر پاسخ معلم بمانید':'اجازهٔ صحبت از معلم بخواهید';
+}
+function openConnCount(){ let n=0; for(const [,e] of state.peers) if(e.conn&&e.conn.open) n++; return n; }
+function updateStatus(){
+  let mode='offline';
+  if(state.peer && !state.leaving){
+    mode = (state.peer.disconnected || !state.peer.open) ? 'reconnecting' : 'online';
+  }
+  if(state.joining) mode='reconnecting';
+  const labels={online:'متصل',reconnecting:'در حال اتصال…',offline:'قطع'};
+  $('statusPill').className='status-pill '+mode;
+  $('statusText').textContent=labels[mode];
+  $('sDot').className='sdot '+mode;
+  $('sStatus').textContent=labels[mode];
+  $('sPeers').textContent=faNum(openConnCount()+1)+' نفر';
+}
+const TOAST_ICON={join:'users',leave:'exit',hand:'hand',crown:'crown',pm:'chat',info:'info',error:'alert'};
+function toast(text,kind){
+  kind=kind||'info';
+  const box=$('toasts');
+  const t=el('div','toast '+kind);
+  const ic=el('span','t-ic'); ic.innerHTML=icon(TOAST_ICON[kind]||'info',15);
+  t.appendChild(ic); t.appendChild(el('span',null,text));
+  box.prepend(t);
+  while(box.children.length>4) box.lastChild.remove();
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),260); },3600);
+}
+
+/* ============================================================
+   LEAVE / RESET
+   ============================================================ */
+function leaveClass(notice){
+  if(state.leaving) return;
+  state.leaving=true;
+  broadcast({type:'bye'});
+  resetToLogin();
+  toast(notice||'شما کلاس را ترک کردید','leave');
+}
+function resetToLogin(){
+  clearInterval(state.heartbeat); state.heartbeat=null;
+  clearTimeout(state.joinTimer); clearTimeout(state.joinDrain);
+  try{ if(state.peer) state.peer.destroy(); }catch(_){}
+  for(const [,e] of state.peers){ try{ if(e.conn) e.conn.close(); }catch(_){} }
+  closePM();
+  state.peers.clear(); state.pm.clear(); state.unread.clear();
+  state.hand=false; state.teacherId=null; state.amTeacher=false;
+  state.joining=false; state.joinBest=null; state.myId=null; state.mySlot=-1; state.myOrder=0;
+  state.peer=null; state.sigTries=0; state.pmOpenFor=null;
+  $('messages').innerHTML=''; $('userList').innerHTML='';
+  $('classScreen').hidden=true; $('loginScreen').hidden=false;
+  state.screen='login';
+  state.leaving=false;
+}
+
+/* ============================================================
+   EVENT BINDINGS
+   ============================================================ */
+ $('loginForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const name=$('nameInput').value.trim().slice(0,24);
+  const room=$('roomInput').value.trim().slice(0,40);
+  if(!name || !room){ showLoginError('نام خود و نام کلاس را وارد کنید.'); return; }
+  $('loginError').hidden=true;
+  joinClass(name,room);
+});
+['nameInput','roomInput'].forEach(id=>$(id).addEventListener('input',()=>{ $('loginError').hidden=true; }));
+
+function showLoginError(msg){
+  const d=$('loginError'); d.textContent=msg; d.hidden=false;
+  const c=document.querySelector('.login-card');
+  c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+}
+function setLoginBusy(busy){
+  const b=$('loginBtn');
+  b.disabled=busy;
+  b.textContent=busy?'در حال اتصال…':'ورود به کلاس';
+}
+
+ $('chatForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const input=$('chatInput');
+  const text=input.value.trim(); if(!text) return;
+  const ts=Date.now(), clean=text.slice(0,800);
+  addMsg({name:state.myName,text:clean,ts,mine:true});
+  broadcast({type:'public-msg',name:state.myName,text:clean,ts});
+  input.value=''; input.focus();
+});
+
+ $('handBtn').addEventListener('click',()=>{
+  state.hand=!state.hand;
+  broadcast({type: state.hand?'raise-hand':'lower-hand'});
+  updateHandUI(); renderUsers();
+  if(state.amTeacher) broadcastList();
+});
+
+ $('leaveBtn').addEventListener('click',()=>leaveClass());
+
+ $('pmForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const id=state.pmOpenFor; if(!id) return;
+  const input=$('pmInput');
+  const text=input.value.trim(); if(!text) return;
+  const e=state.peers.get(id);
+  if(!e || !e.conn || !e.conn.open){ toast('این کاربر در دسترس نیست','error'); return; }
+  const msg={mine:true,text:text.slice(0,800),ts:Date.now()};
+  pushPM(id,msg);
+  safeSend(e.conn,{type:'private-msg',to:id,from:state.myId,name:state.myName,text:msg.text,ts:msg.ts});
+  input.value='';
+  renderPM();
+});
+ $('pmClose').addEventListener('click',closePM);
+ $('pmBackdrop').addEventListener('click',closePM);
+
+/* best-effort goodbye when the tab closes (peers also detect dropped conns) */
+window.addEventListener('pagehide',()=>{
+  if(state.peer && !state.leaving && state.screen==='class'){
+    try{ broadcast({type:'bye'}); }catch(_){}
+  }
+});
+</script>
+</body>
+</html>
